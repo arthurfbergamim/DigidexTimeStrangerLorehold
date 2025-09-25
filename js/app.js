@@ -1,0 +1,724 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const digimonDB = new Map();
+
+    const loaderContainer = document.getElementById('loader-container');
+    const appContainer = document.getElementById('app-container');
+    const fullListContainer = document.getElementById('full-list-container');
+
+    const preEvolutionsContainer = document.getElementById('pre-evolutions');
+    const mainDigimonContainer = document.getElementById('main-digimon');
+    const evolutionsContainer = document.getElementById('evolutions');
+    const searchInput = document.getElementById('search-input');
+    const datalist = document.getElementById('digimon-list');
+    const fullListBtn = document.getElementById('full-list-btn');
+    const backToDexBtn = document.getElementById('back-to-dex-btn');
+    const fullListContent = document.getElementById('full-list-content');
+
+    // Final database, combining data CSV with links CSV.
+    const digimonRawData = [
+        { name: 'Kuramon', stage: 'I', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1629.jpg', evolutions: ['Pagumon', 'Tsumemon'] },
+        { name: 'Choromon', stage: 'I', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1241.jpg', evolutions: ['Caprimon'] },
+        { name: 'Dodomon', stage: 'I', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1316.jpg', evolutions: ['Wanyamon', 'Dorimon'] },
+        { name: 'Bubbmon', stage: 'I', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1387.jpg', evolutions: ['Mochimon', 'Pyocomon', 'Tanemon'] },
+        { name: 'Punimon', stage: 'I', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1437.jpg', evolutions: ['Tunomon', 'Nyaromon'] },
+        { name: 'Botamon', stage: 'I', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1317.jpg', evolutions: ['Koromon'] },
+        { name: 'Poyomon', stage: 'I', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1320.jpg', evolutions: ['Pukamon', 'Tokomon'] },
+        { name: 'Caprimon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1242.jpg', evolutions: ['Hagurumon', 'Kokuwamon', 'Toy Agumon', 'Solarmon'] },
+        { name: 'Koromon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1322.jpg', evolutions: ['Agumon', 'Guilmon', 'Dracomon', 'Kotemon', 'Betamon', 'Shoutmon'] },
+        { name: 'Tanemon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1512.jpg', evolutions: ['Funbeemon', 'Lalamon', 'Palmon', 'Mushmon', 'Floramon'] },
+        { name: 'Tunomon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1438.jpg', evolutions: ['Goburimon', 'V-Mon', 'Gabumon', 'Ryudamon', 'Elecmon', 'Zubamon'] },
+        { name: 'Tsumemon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1631.jpg', evolutions: ['Dracumon', 'Shamamon', 'Keramon'] },
+        { name: 'Tokomon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1325.jpg', evolutions: ['Patamon', 'Coronamon', 'Terriermon', 'Armadimon', 'Lucemon'] },
+        { name: 'Dorimon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1466.jpg', evolutions: ['Dorumon', 'Monodramon', 'Snow Goburimon', 'Lopmon'] },
+        { name: 'Nyaromon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1515.jpg', evolutions: ['Lunamon', 'Kudamon', 'Plotmon', 'Hackmon'] },
+        { name: 'Pagumon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1567.jpg', evolutions: ['Impmon', 'Pico Devimon', 'Gazimon', 'Otamamon'] },
+        { name: 'Pyocomon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1510.jpg', evolutions: ['Piyomon', 'Penmon', 'Falcomon', 'Hawkmon', 'Hyokomon', 'Muchomon'] },
+        { name: 'Pukamon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1514.jpg', evolutions: ['Kamemon', 'Ganimon', 'Gomamon', 'Gizamon', 'Shakomon'] },
+        { name: 'Mochimon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1388.jpg', evolutions: ['Tyumon', 'Tentomon', 'Wormmon', 'Gottsumon'] },
+        { name: 'Wanyamon', stage: 'II', attribute: 'None', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1321.jpg', evolutions: ['Gaomon', 'Bakumon', 'Bearmon', 'Renamon'] },
+        { name: 'Agumon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1050.jpg', evolutions: ['Raptordramon', 'Geo Greymon', 'Numemon', 'Greymon', 'Coredramon (Green)', 'Agumon -Yuki No Kizuna-'] },
+        { name: 'Kudamon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1053.jpg', evolutions: ['Airdramon', 'Reppamon', 'Angemon', 'Ginryumon', 'Wolfmon', 'Sorcerimon'] },
+        { name: 'Gomamon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1343.jpg', evolutions: ['Mojyamon', 'Ikkakumon', 'Yukidarumon', 'Hyougamon', 'Ice Devimon'] },
+        { name: 'Coronamon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1136.jpg', evolutions: ['Firamon', 'Meramon', 'Growmon', 'Bao Hackmon', 'Birdramon', 'Agnimon'] },
+        { name: 'Zubamon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1697.jpg', evolutions: ['Musyamon', 'Buraimon', 'Tankmon', 'Zubaeagermon', 'Ankylomon', 'Guardromon (Gold)'] },
+        { name: 'Solarmon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1728.jpg', evolutions: ['Starmon', 'Gold Numemon', 'Meramon', 'Guardromon (Gold)'] },
+        { name: 'Terriermon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1701.jpg', evolutions: ['Mojyamon', 'Lekismon', 'Gawappamon', 'Gargomon', 'Rapidmon Armor'] },
+        { name: 'Tentomon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1303.jpg', evolutions: ['Kabuterimon', 'Sunflowmon', 'Kuwagamon', 'Waspmon', 'Snimon'] },
+        { name: 'Toy Agumon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1708.jpg', evolutions: ['Blimpmon', 'Revolmon', 'Raremon', 'Tankmon', 'Gargomon'] },
+        { name: 'Bakumon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1231.jpg', evolutions: ['Meramon', 'Garurumon', 'Bakemon', 'Unimon', 'Kyubimon'] },
+        { name: 'Hyokomon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1573.jpg', evolutions: ['Peckmon', 'Birdramon', 'Dinohumon', 'Buraimon'] },
+        { name: 'Piyomon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1307.jpg', evolutions: ['Aquilamon', 'Birdramon', 'Unimon', 'Wizarmon'] },
+        { name: 'Falcomon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1705.jpg', evolutions: ['Peckmon', 'Ginryumon', 'Kiwimon'] },
+        { name: 'Plotmon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1361.jpg', evolutions: ['Tailmon', 'Sangloupmon', 'Dobermon', 'Ikkakumon', 'V-Dramon', 'Drimogemon'] },
+        { name: 'Bearmon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1234.jpg', evolutions: ['Gryzmon', 'Gaogamon', 'Mojyamon', 'Leomon'] },
+        { name: 'Penmon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1622.jpg', evolutions: ['Peckmon', 'Buraimon', 'Kiwimon', 'Aquilamon'] },
+        { name: 'Monodramon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1458.jpg', evolutions: ['Strikedramon', 'Raptordramon', 'Deltamon', 'Chrysalimon', 'Cyclomon'] },
+        { name: 'Ryudamon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1190.jpg', evolutions: ['Reppamon', 'Coelamon', 'Ginryumon', 'Greymon', 'Monochromon'] },
+        { name: 'Lucemon', stage: 'III', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1390.jpg', evolutions: ['Lucemon: Falldown Mode'] },
+        { name: 'Elecmon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1564.jpg', evolutions: ['Aegiomon', 'Seadramon', 'Unimon', 'Kuwagamon', 'Gekomon'] },
+        { name: 'Gaomon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1055.jpg', evolutions: ['Strikedramon', 'Gaogamon', 'Leomon', 'Nanimon', 'Turuiemon'] },
+        { name: 'Ganimon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1103.jpg', evolutions: ['Gawappamon', 'Octmon', 'Shellmon', 'Raremon', 'Snimon', 'Coelamon'] },
+        { name: 'Gabumon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1151.jpg', evolutions: ['Garurumon', 'Ikkakumon', 'Drimogemon', 'Kyubimon', 'Geremon', 'Gabumon-Yujo No Kizuna-'] },
+        { name: 'Kamemon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1052.jpg', evolutions: ['Gawappamon', 'Octmon', 'Shellmon', 'Karatuki Numemon', 'Dinohumon', 'Sorcerimon'] },
+        { name: 'Kokuwamon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1609.jpg', evolutions: ['Centalmon', 'Kuwagamon', 'Clockmon', 'Waspmon', 'Mechanorimon'] },
+        { name: 'Gottsumon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1595.jpg', evolutions: ['Starmon', 'Guardromon', 'Golemon', 'Monochromon', 'Icemon', 'Tuchidarumon'] },
+        { name: 'Kotemon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1219.jpg', evolutions: ['Turuiemon', 'Musyamon', 'Revolmon', 'Dinohumon', 'Coredramon (Blue)'] },
+        { name: 'Shoutmon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1682.jpg', evolutions: ['Omega Shoutmon', 'Zubaeagermon', 'Gargomon', 'Guardromon (Gold)'] },
+        { name: 'Dracomon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1208.jpg', evolutions: ['Coredramon (Green)', 'Coredramon (Blue)', 'Deltamon', 'V-Dramon', 'Seadramon', 'Tyranomon'] },
+        { name: 'Dorumon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1112.jpg', evolutions: ['Raptordramon', 'Airdramon', 'Sangloupmon', 'Xv-Mon', 'Drimogemon', 'Dorugamon'] },
+        { name: 'Patamon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1096.jpg', evolutions: ['Angemon', 'Pegasmon', 'Unimon', 'Centalmon'] },
+        { name: 'Hackmon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1687.jpg', evolutions: ['Tailmon', 'Geo Greymon', 'Growmon', 'Bao Hackmon', 'Greymon'] },
+        { name: 'Palmon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1348.jpg', evolutions: ['Mojyamon', 'Vegimon', 'Togemon', 'Woodmon', 'Chrysalimon', 'Platinum Scumon'] },
+        { name: 'Floramon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1611.jpg', evolutions: ['Vegimon', 'Togemon', 'Woodmon', 'Sunflowmon', 'Kiwimon'] },
+        { name: 'Muchomon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1623.jpg', evolutions: ['Airdramon', 'Peckmon', 'Birdramon', 'Fugamon'] },
+        { name: 'Lalamon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1056.jpg', evolutions: ['Sunflowmon', 'Togemon', 'Revolmon', 'Tuchidarumon', 'Turuiemon'] },
+        { name: 'Lunamon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1002.jpg', evolutions: ['Lekismon', 'Garurumon', 'Yukidarumon', 'Hyougamon', 'Sorcerimon', 'Icemon'] },
+        { name: 'Renamon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1391.jpg', evolutions: ['Lekismon', 'Sunflowmon', 'Reppamon', 'Kyubimon'] },
+        { name: 'Lopmon', stage: 'III', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1750.jpg', evolutions: ['Gryzmon', 'Minotaurmon', 'Leomon', 'Turuiemon', 'Wendimon', 'Tuchidarumon'] },
+        { name: 'Impmon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1081.jpg', evolutions: ['Bakemon', 'Wizarmon', 'Clockmon', 'Sangloupmon', 'Devimon', 'Witchmon'] },
+        { name: 'Otamamon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1582.jpg', evolutions: ['Seadramon', 'Numemon', 'Gekomon', 'Karatuki Numemon', 'Platinum Scumon'] },
+        { name: 'Gazimon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1569.jpg', evolutions: ['Sangloupmon', 'Black Tailmon', 'Gaogamon', 'Bao Hackmon', 'Dobermon', 'Dorugamon'] },
+        { name: 'Gizamon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1594.jpg', evolutions: ['Cyclomon', 'Flymon', 'Zubaeagermon', 'Ankylomon', 'Geremon', 'Ranamon'] },
+        { name: 'Guilmon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1090.jpg', evolutions: ['Geo Greymon', 'Growmon', 'Xv-Mon', 'Tyranomon'] },
+        { name: 'Goburimon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1111.jpg', evolutions: ['Golemon', 'Wendimon', 'Deltamon', 'Tuskmon', 'Orgemon'] },
+        { name: 'Shamamon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1577.jpg', evolutions: ['Minotaurmon', 'Musyamon', 'Fugamon', 'Witchmon'] },
+        { name: 'Shakomon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1709.jpg', evolutions: ['Coelamon', 'Shellmon', 'Karatuki Numemon', 'Octmon', 'Raremon'] },
+        { name: 'Snow Goburimon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1578.jpg', evolutions: ['Tailmon', 'Monochromon', 'Yukidarumon', 'Hyougamon', 'Ice Devimon', 'Icemon'] },
+        { name: 'Tyumon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1020.jpg', evolutions: ['Black Tailmon', 'Scumon', 'Tailmon', 'Gekomon', 'Geremon', 'Platinum Scumon'] },
+        { name: 'Dracumon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1457.jpg', evolutions: ['Sangloupmon', 'Scumon', 'Wizarmon', 'Starmon'] },
+        { name: 'Hagurumon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1009.jpg', evolutions: ['Clockmon', 'Mechanorimon', 'Tankmon', 'Guardromon', 'Blimpmon'] },
+        { name: 'Pico Devimon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1097.jpg', evolutions: ['Bakemon', 'Ice Devimon', 'Devimon', 'Orgemon'] },
+        { name: 'Funbeemon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1042.jpg', evolutions: ['Waspmon', 'Flymon', 'Dokugumon', 'Stingmon', 'Gold Numemon', 'Kabuterimon'] },
+        { name: 'Betamon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1389.jpg', evolutions: ['Seadramon', 'Coelamon', 'Devimon', 'Numemon', 'Vegimon', 'Tuskmon'] },
+        { name: 'Mushmon', stage: 'III', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1607.jpg', evolutions: ['Scumon', 'Nanimon', 'Woodmon', 'Flymon'] },
+        { name: 'Armadimon', stage: 'III', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1707.jpg', evolutions: ['Digmon', 'Submarimon', 'Golemon', 'Ankylomon'] },
+        { name: 'V-Mon', stage: 'III', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1114.jpg', evolutions: ['Xv-Mon', 'V-Dramon', 'Lighdramon', 'Magnamon', 'Fladramon'] },
+        { name: 'Hawkmon', stage: 'III', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1706.jpg', evolutions: ['Firamon', 'Holsmon', 'Shurimon', 'Aquilamon'] },
+        { name: 'Wormmon', stage: 'III', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1392.jpg', evolutions: ['Stingmon', 'Dokugumon', 'Snimon'] },
+        { name: 'Keramon', stage: 'III', attribute: 'Unknown', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1626.jpg', evolutions: ['Dokugumon', 'Wendimon', 'Octmon', 'Mechanorimon', 'Chrysalimon'] },
+        { name: 'Aegiomon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1183.jpg', evolutions: ['Aegiochusmon', 'Aegiochusmon: Dark', 'Aegiochusmon: Holy', 'Aegiochusmon: Blue', 'Aegiochusmon: Green'] },
+        { name: 'Ikkakumon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1344.jpg', evolutions: ['Whamon', 'Mega Seadramon', 'Zudomon', 'Skullseadramon'] },
+        { name: 'Airdramon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1011.jpg', evolutions: ['Hisyaryumon', 'Megadramon', 'Aero V-Dramon', 'Gigadramon'] },
+        { name: 'Angemon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1087.jpg', evolutions: ['Hippogriffomon', 'Holy Angemon', 'Sirenmon', 'Shakkoumon'] },
+        { name: 'Kabuterimon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1304.jpg', evolutions: ['Lilamon', 'Atlur Kabuterimon', 'Cannonbeemon', 'Chimairamon'] },
+        { name: 'Gargomon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1710.jpg', evolutions: ['Catch Mamemon', 'Mach Gaogamon', 'Rapidmon Perfect'] },
+        { name: 'Garurumon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1012.jpg', evolutions: ['Were Garurumon', 'Blue Meramon', 'Taomon', 'Chimairamon'] },
+        { name: 'Ginryumon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1191.jpg', evolutions: ['Hisyaryumon', 'Skull Greymon', 'Butenmon'] },
+        { name: 'Gryzmon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1235.jpg', evolutions: ['Were Garurumon', 'Grappu Leomon', 'Great Gryzmon'] },
+        { name: 'Greymon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1326.jpg', evolutions: ['Metal Greymon', 'Megadramon', 'Skull Greymon', 'Chimairamon'] },
+        { name: 'Coredramon (Blue)', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1218.jpg', evolutions: ['Wingdramon', 'Aero V-Dramon', 'Gigadramon'] },
+        { name: 'Geo Greymon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1054.jpg', evolutions: ['Rize Greymon', 'Metal Tyranomon', 'Cyberdramon'] },
+        { name: 'Strikedramon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1016.jpg', evolutions: ['Cyberdramon', 'Savior Hackmon', 'Locomon'] },
+        { name: 'Snimon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1406.jpg', evolutions: ['Okuwamon', 'Fantomon', 'Archnemon', 'Jewelbeemon'] },
+        { name: 'Zubaeagermon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1698.jpg', evolutions: ['Grademon', 'Megalo Growmon', 'Duramon', 'Knightmon'] },
+        { name: 'Sorcerimon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1755.jpg', evolutions: ['Holy Angemon', 'Piccolomon', 'Wisemon'] },
+        { name: 'Tailmon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1092.jpg', evolutions: ['Nefertimon', 'Angewomon', 'Silphymon'] },
+        { name: 'Dobermon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1222.jpg', evolutions: ['Matadrmon', 'Dark Super Starmon', 'Cerberumon', 'Mummymon'] },
+        { name: 'Birdramon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1308.jpg', evolutions: ['Flaremon', 'Garudamon', 'Death Meramon', 'Parrotmon'] },
+        { name: 'Firamon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1137.jpg', evolutions: ['Flaremon', 'Savior Hackmon', 'Mistymon'] },
+        { name: 'V-Dramon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1397.jpg', evolutions: ['Wingdramon', 'Aero V-Dramon', 'Cyberdramon'] },
+        { name: 'Buraimon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1574.jpg', evolutions: ['Butenmon', 'Duramon', 'Garudamon'] },
+        { name: 'Peckmon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1408.jpg', evolutions: ['Tyilinmon', 'Vamdemon', 'Yatagaramon'] },
+        { name: 'Mojyamon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1371.jpg', evolutions: ['Zudomon', 'Piccolomon', 'Mistymon', 'Mammon'] },
+        { name: 'Yukidarumon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1370.jpg', evolutions: ['Crescemon', 'Angewomon', 'Panjyamon', 'Mammon', 'Insekimon'] },
+        { name: 'Unimon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1548.jpg', evolutions: ['Hippogriffomon', 'Holy Angemon', 'Tyilinmon'] },
+        { name: 'Raptordramon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1025.jpg', evolutions: ['Grademon', 'Gigadramon', 'Tankdramon'] },
+        { name: 'Revolmon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1456.jpg', evolutions: ['Pandamon', 'Super Starmon', 'Wisemon'] },
+        { name: 'Leomon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1072.jpg', evolutions: ['Flaremon', 'Grappu Leomon', 'Panjyamon', 'Loader Leomon'] },
+        { name: 'Reppamon', stage: 'IV', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1077.jpg', evolutions: ['Tyilinmon', 'Mega Seadramon', 'Angewomon', 'Doruguremon'] },
+        { name: 'Icemon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1758.jpg', evolutions: ['Crescemon', 'Insekimon', 'Panjyamon'] },
+        { name: 'Wizarmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1377.jpg', evolutions: ['Nanomon', 'Mistymon', 'Wisemon'] },
+        { name: 'Witchmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1601.jpg', evolutions: ['Lady Devimon', 'Angewomon', 'Lilimon'] },
+        { name: 'Gaogamon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1068.jpg', evolutions: ['Mach Gaogamon', 'Savior Hackmon', 'Dark Super Starmon'] },
+        { name: 'Gawappamon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1051.jpg', evolutions: ['Shawujinmon', 'Hangyomon', 'Tonosama Gekomon'] },
+        { name: 'Kiwimon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1610.jpg', evolutions: ['Lilamon', 'Sirenmon', 'Delumon', 'Jyureimon'] },
+        { name: 'Kyubimon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1395.jpg', evolutions: ['Blue Meramon', 'Cerberumon', 'Taomon', 'Enbarrmon'] },
+        { name: 'Clockmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1398.jpg', evolutions: ['Ex-Tyranomon', 'Andromon', 'Zudomon', 'Knightmon'] },
+        { name: 'Centalmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1372.jpg', evolutions: ['Andromon', 'Nanomon', 'Rapidmon Perfect'] },
+        { name: 'Sunflowmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1058.jpg', evolutions: ['Lilamon', 'Lilimon', 'Delumon', 'Pumpmon'] },
+        { name: 'Seadramon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1347.jpg', evolutions: ['Whamon', 'Mega Seadramon', 'Waru Seadramon', 'Hisyaryumon', 'Sharkmon', 'Skullseadramon'] },
+        { name: 'Coelamon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1130.jpg', evolutions: ['Waru Seadramon', 'Metal Tyranomon', 'Anomalocarimon', 'Hangyomon', 'Skullseadramon'] },
+        { name: 'Shellmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1368.jpg', evolutions: ['Whamon', 'Piccolomon', 'Anomalocarimon'] },
+        { name: 'Starmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1014.jpg', evolutions: ['Volcamon', 'Super Starmon', 'Dark Super Starmon', 'Mamemon'] },
+        { name: 'Tankmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1621.jpg', evolutions: ['Big Mamemon', 'Locomon', 'Tankdramon'] },
+        { name: 'Tuchidarumon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1759.jpg', evolutions: ['Delumon', 'Gerbemon', 'Andiramon'] },
+        { name: 'Dinohumon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1474.jpg', evolutions: ['Shawujinmon', 'Grademon', 'Knightmon'] },
+        { name: 'Tyranomon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1363.jpg', evolutions: ['Ex-Tyranomon', 'Groundramon', 'Metal Greymon', 'Metal Tyranomon'] },
+        { name: 'Turuiemon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1102.jpg', evolutions: ['Matadrmon', 'Mach Gaogamon', 'Andiramon'] },
+        { name: 'Togemon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1349.jpg', evolutions: ['Lilimon', 'Jyureimon', 'Pumpmon'] },
+        { name: 'Drimogemon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1373.jpg', evolutions: ['Triceramon', 'Loader Leomon', 'Brachiomon'] },
+        { name: 'Dorugamon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1396.jpg', evolutions: ['Rize Greymon', 'Doruguremon', 'Great Gryzmon'] },
+        { name: 'Bao Hackmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1115.jpg', evolutions: ['Rize Greymon', 'Savior Hackmon', 'Loader Leomon'] },
+        { name: 'Blimpmon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1463.jpg', evolutions: ['Locomon', 'Metal Mamemon', 'Master Blimpmon'] },
+        { name: 'Meramon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1010.jpg', evolutions: ['Big Mamemon', 'Blue Meramon', 'Death Meramon'] },
+        { name: 'Monochromon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1369.jpg', evolutions: ['Triceramon', 'Cerberumon', 'Mammon'] },
+        { name: 'Lekismon', stage: 'IV', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1003.jpg', evolutions: ['Crescemon', 'Were Garurumon', 'Grappu Leomon'] },
+        { name: 'Ice Devimon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1730.jpg', evolutions: ['Crescemon', 'Lady Devimon', 'Panjyamon', 'Enbarrmon'] },
+        { name: 'Wendimon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1100.jpg', evolutions: ['Archnemon', 'Death Meramon', 'Andiramon'] },
+        { name: 'Woodmon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1393.jpg', evolutions: ['Jyureimon', 'Taomon', 'Pumpmon'] },
+        { name: 'Orgemon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1394.jpg', evolutions: ['Skull Satamon', 'Mummymon', 'Digitamamon'] },
+        { name: 'Octmon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1240.jpg', evolutions: ['Dagomon', 'Digitamamon', 'Hangyomon'] },
+        { name: 'Guardromon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1341.jpg', evolutions: ['Catch Mamemon', 'Locomon', 'Andromon'] },
+        { name: 'Karatuki Numemon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1455.jpg', evolutions: ['Orochimon', 'Waru Seadramon', 'Black King Numemon', 'Pandamon'] },
+        { name: 'Growmon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1078.jpg', evolutions: ['Megalo Growmon', 'Groundramon', 'Doruguremon'] },
+        { name: 'Kuwagamon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1367.jpg', evolutions: ['Jyureimon', 'Okuwamon', 'Anomalocarimon', 'Chimairamon'] },
+        { name: 'Gekomon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1399.jpg', evolutions: ['Sirenmon', 'Tonosama Gekomon', 'Hangyomon'] },
+        { name: 'Geremon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1729.jpg', evolutions: ['Catch Mamemon', 'Super Starmon', 'Monzaemon'] },
+        { name: 'Coredramon (Green)', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1209.jpg', evolutions: ['Megalo Growmon', 'Groundramon', 'Skull Greymon'] },
+        { name: 'Gold Numemon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1113.jpg', evolutions: ['Waru Seadramon', 'Vademon', 'Black King Numemon'] },
+        { name: 'Golemon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1005.jpg', evolutions: ['Volcamon', 'Mammon', 'Insekimon'] },
+        { name: 'Cyclomon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1452.jpg', evolutions: ['Grademon', 'Cyberdramon', 'Brachiomon'] },
+        { name: 'Sangloupmon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1030.jpg', evolutions: ['Matadrmon', 'Vamdemon', 'Astamon'] },
+        { name: 'Scumon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1313.jpg', evolutions: ['Monzaemon', 'Etemon', 'Gerbemon', 'Mamemon'] },
+        { name: 'Tuskmon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1598.jpg', evolutions: ['Triceramon', 'Groundramon', 'Digitamamon'] },
+        { name: 'Devimon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1093.jpg', evolutions: ['Vamdemon', 'Lady Devimon', 'Infermon', 'Skull Satamon', 'Astamon'] },
+        { name: 'Deltamon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1228.jpg', evolutions: ['Orochimon', 'Chimairamon', 'Skull Baluchimon', 'Metal Greymon', 'Sharkmon'] },
+        { name: 'Dokugumon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1592.jpg', evolutions: ['Archnemon', 'Mummymon', 'Atlur Kabuterimon', 'Infermon'] },
+        { name: 'Nanimon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1375.jpg', evolutions: ['Volcamon', 'Super Starmon', 'Etemon', 'Mamemon'] },
+        { name: 'Numemon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1070.jpg', evolutions: ['Monzaemon', 'Dark Super Starmon', 'Etemon'] },
+        { name: 'Bakemon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1013.jpg', evolutions: ['Vamdemon', 'Blue Meramon', 'Fantomon', 'Enbarrmon'] },
+        { name: 'Hyougamon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1580.jpg', evolutions: ['Zudomon', 'Fantomon', 'Panjyamon'] },
+        { name: 'Fugamon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1579.jpg', evolutions: ['Volcamon', 'Skull Satamon', 'Garudamon'] },
+        { name: 'Flymon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1586.jpg', evolutions: ['Megadramon', 'Atlur Kabuterimon', 'Okuwamon', 'Jewelbeemon'] },
+        { name: 'Platinum Scumon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1752.jpg', evolutions: ['Vademon', 'Mamemon', 'Metal Mamemon'] },
+        { name: 'Black Tailmon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1043.jpg', evolutions: ['Pandamon', 'Lady Devimon', 'Skull Baluchimon'] },
+        { name: 'Vegimon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1314.jpg', evolutions: ['Tonosama Gekomon', 'Gerbemon', 'Vademon'] },
+        { name: 'Minotaurmon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1017.jpg', evolutions: ['Triceramon', 'Etemon', 'Grappu Leomon'] },
+        { name: 'Musyamon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1220.jpg', evolutions: ['Grademon', 'Butenmon', 'Hisyaryumon'] },
+        { name: 'Mechanorimon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1615.jpg', evolutions: ['Big Mamemon', 'Megadramon', 'Nanomon'] },
+        { name: 'Raremon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1590.jpg', evolutions: ['Dagomon', 'Black King Numemon', 'Tonosama Gekomon', 'Ex-Tyranomon', 'Skull Baluchimon'] },
+        { name: 'Waspmon', stage: 'IV', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1454.jpg', evolutions: ['Rapidmon Perfect', 'Cannonbeemon', 'Tankdramon'] },
+        { name: 'Aquilamon', stage: 'IV', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1015.jpg', evolutions: ['Garudamon', 'Parrotmon', 'Silphymon', 'Yatagaramon'] },
+        { name: 'Ankylomon', stage: 'IV', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1711.jpg', evolutions: ['Shakkoumon', 'Insekimon', 'Brachiomon'] },
+        { name: 'Xv-Mon', stage: 'IV', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1365.jpg', evolutions: ['Dinobeemon', 'Rize Greymon', 'Paildramon'] },
+        { name: 'Guardromon (Gold)', stage: 'IV', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1760.jpg', evolutions: ['Duramon', 'Cannonbeemon', 'Master Blimpmon'] },
+        { name: 'Stingmon', stage: 'IV', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1091.jpg', evolutions: ['Okuwamon', 'Jewelbeemon', 'Dinobeemon', 'Paildramon'] },
+        { name: 'Chrysalimon', stage: 'IV', attribute: 'Unknown', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1630.jpg', evolutions: ['Dagomon', 'Orochimon', 'Archnemon', 'Infermon'] },
+        { name: 'Submarimon', stage: 'Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1145.jpg', evolutions: [] },
+        { name: 'Shurimon', stage: 'Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1142.jpg', evolutions: [] },
+        { name: 'Digmon', stage: 'Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1144.jpg', evolutions: [] },
+        { name: 'Nefertimon', stage: 'Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1147.jpg', evolutions: [] },
+        { name: 'Fladramon', stage: 'Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1716.jpg', evolutions: [] },
+        { name: 'Pegasmon', stage: 'Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1146.jpg', evolutions: [] },
+        { name: 'Holsmon', stage: 'Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1141.jpg', evolutions: [] },
+        { name: 'Lighdramon', stage: 'Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1139.jpg', evolutions: [] },
+        { name: 'Agnimon', stage: 'Human Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1676.jpg', evolutions: ['Aldamon', 'Vritramon'] },
+        { name: 'Wolfmon', stage: 'Human Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1680.jpg', evolutions: ['Beowolfmon', 'Garummon'] },
+        { name: 'Ranamon', stage: 'Human Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1162.jpg', evolutions: ['Calamaramon'] },
+        { name: 'Vritramon', stage: 'Beast Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1679.jpg', evolutions: ['Aldamon', 'Agnimon'] },
+        { name: 'Calamaramon', stage: 'Beast Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1163.jpg', evolutions: ['Ranamon'] },
+        { name: 'Garummon', stage: 'Beast Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1681.jpg', evolutions: ['Beowolfmon', 'Wolfmon'] },
+        { name: 'Aegiochusmon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1184.jpg', evolutions: ['Jupitermon'] },
+        { name: 'Aegiochusmon: Green', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1188.jpg', evolutions: ['Jupitermon'] },
+        { name: 'Aegiochusmon: Dark', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1185.jpg', evolutions: ['Chronomon Destroy'] },
+        { name: 'Aegiochusmon: Blue', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1187.jpg', evolutions: ['Jupitermon'] },
+        { name: 'Aegiochusmon: Holy', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1186.jpg', evolutions: ['Jupitermon'] },
+        { name: 'Atlur Kabuterimon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1305.jpg', evolutions: ['Tyrant Kabuterimon', 'Herakle Kabuterimon'] },
+        { name: 'Andromon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1342.jpg', evolutions: ['Hi Andromon', 'Boltmon', 'Craniummon'] },
+        { name: 'Wingdramon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1210.jpg', evolutions: ['Shine Greymon', 'Valdurmon', 'Slayerdramon'] },
+        { name: 'Aero V-Dramon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1400.jpg', evolutions: ['Goddramon', 'Slayerdramon', 'Ulforce V-Dramon'] },
+        { name: 'Ex-Tyranomon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1001.jpg', evolutions: ['Rust Tyranomon', 'Belphemon: Sleep Mode', 'Cherubimon (Virtue)'] },
+        { name: 'Angewomon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1148.jpg', evolutions: ['Junomon', 'Ofanimon', 'Holydramon', 'Mastemon'] },
+        { name: 'Garudamon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1309.jpg', evolutions: ['Griffomon', 'Hououmon', 'Jesman'] },
+        { name: 'Grappu Leomon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1403.jpg', evolutions: ['Bancho Leomon', 'Marsmon', 'Saber Leomon', 'Duftmon'] },
+        { name: 'Grademon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1026.jpg', evolutions: ['Alphamon', 'Durandamon', 'Dynasmon'] },
+        { name: 'Great Gryzmon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1491.jpg', evolutions: ['Callismon', 'Cherubimon (Vice)'] },
+        { name: 'Cerberumon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1223.jpg', evolutions: ['Plutomon', 'Cerberumon: Werewolf Mode', 'Saber Leomon'] },
+        { name: 'Cerberumon: Werewolf Mode', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1224.jpg', evolutions: ['Plutomon', 'Cerberumon', 'Saber Leomon'] },
+        { name: 'Cyberdramon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1719.jpg', evolutions: ['Ulforce V-Dramon', 'Justimon'] },
+        { name: 'Jewelbeemon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1484.jpg', evolutions: ['Herakle Kabuterimon', 'Tiger Vespamon'] },
+        { name: 'Zudomon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1345.jpg', evolutions: ['Vikemon', 'Plesiomon'] },
+        { name: 'Tyilinmon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1084.jpg', evolutions: ['Sleipmon', 'Crossmon', 'Valkyrimon'] },
+        { name: 'Duramon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1699.jpg', evolutions: ['War Greymon', 'Dukemon', 'Durandamon'] },
+        { name: 'Parrotmon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1414.jpg', evolutions: ['Crossmon', 'Hououmon'] },
+        { name: 'Panjyamon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1409.jpg', evolutions: ['Mirage Gaogamon', 'Saber Leomon'] },
+        { name: 'Hisyaryumon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1192.jpg', evolutions: ['Ouryumon', 'Gaioumon'] },
+        { name: 'Butenmon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1575.jpg', evolutions: ['Chronomon', 'Chronomon Destroy', 'Griffomon', 'Gaioumon'] },
+        { name: 'Flaremon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1138.jpg', evolutions: ['Apollomon', 'Seraphimon'] },
+        { name: 'Whamon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1021.jpg', evolutions: ['Leviamon', 'Neptunemon', 'Plesiomon', 'Marin Angemon'] },
+        { name: 'Holy Angemon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1101.jpg', evolutions: ['Goddramon', 'Seraphimon', 'Clavis Angemon', 'Slash Angemon'] },
+        { name: 'Mammon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1588.jpg', evolutions: ['Vikemon', 'Skull Mammon'] },
+        { name: 'Metal Greymon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1302.jpg', evolutions: ['War Greymon', 'Gaioumon'] },
+        { name: 'Monzaemon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1061.jpg', evolutions: ['King Etemon', 'Callismon'] },
+        { name: 'Yatagaramon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1721.jpg', evolutions: ['Valdurmon', 'Ravmon', 'Kuzuhamon'] },
+        { name: 'Rize Greymon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1071.jpg', evolutions: ['Sleipmon', 'Shine Greymon', 'Magna Kidmon'] },
+        { name: 'Rapidmon Perfect', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1722.jpg', evolutions: ['Saint Galgomon', 'Hi Andromon'] },
+        { name: 'Loader Leomon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1479.jpg', evolutions: ['Bancho Leomon', 'Metal Garurumon', 'Chaosdramon'] },
+        { name: 'Were Garurumon', stage: 'V', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1140.jpg', evolutions: ['Mercurymon', 'Metal Garurumon'] },
+        { name: 'Anomalocarimon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1605.jpg', evolutions: ['Vulcanusmon', 'Pukumon'] },
+        { name: 'Enbarrmon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1920.jpg', evolutions: ['Sleipmon', 'Skull Mammon', 'Enbarrmon Craniummon'] },
+        { name: 'Andiramon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1731.jpg', evolutions: ['Dianamon', 'Cherubimon (Virtue)', 'Cherubimon (Vice)'] },
+        { name: 'Insekimon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1756.jpg', evolutions: ['Metal Etemon', 'Boltmon'] },
+        { name: 'Omega Shoutmon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1683.jpg', evolutions: ['Pile Volcamon', 'Magna Kidmon', 'Durandamon'] },
+        { name: 'Chimairamon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1229.jpg', evolutions: ['Grand Dracumon', 'Millenniumon', 'Mugendramon'] },
+        { name: 'Catch Mamemon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1044.jpg', evolutions: ['Platinum Numemon', 'Prince Mamemon'] },
+        { name: 'Crescemon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1004.jpg', evolutions: ['Dianamon', 'Cherubimon (Virtue)', 'Lord Knightmon'] },
+        { name: 'Super Starmon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1079.jpg', evolutions: ['Goddramon', 'Prince Mamemon', 'Justimon'] },
+        { name: 'Skull Baluchimon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1239.jpg', evolutions: ['Skull Mammon', 'Skull Baluchimon Titamon'] },
+        { name: 'Savior Hackmon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1116.jpg', evolutions: ['Gankoomon', 'Tiger Vespamon', 'Jesman'] },
+        { name: 'Sirenmon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1232.jpg', evolutions: ['Marin Angemon', 'Ceresmon'] },
+        { name: 'Taomon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1405.jpg', evolutions: ['Venusmon', 'Sakuyamon', 'Kuzuhamon'] },
+        { name: 'Digitamamon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1374.jpg', evolutions: ['Bacchusmon', 'Titamon'] },
+        { name: 'Death Meramon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1406.jpg', evolutions: ['Beelzebumon', 'Boltmon', 'Avenge Kidmon'] },
+        { name: 'Delumon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1378.jpg', evolutions: ['Valdurmon', 'Ceresmon', 'Platinum Numemon'] },
+        { name: 'Triceramon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1033.jpg', evolutions: ['Breakdramon', 'Ultimate Brachiomon'] },
+        { name: 'Doruguremon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1407.jpg', evolutions: ['Dorugoramon', 'Alphamon'] },
+        { name: 'Knightmon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1718.jpg', evolutions: ['Zanbamon', 'Slash Angemon', 'Lord Knightmon', 'Duftmon'] },
+        { name: 'Hangyomon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1606.jpg', evolutions: ['Neptunemon', 'Plesiomon'] },
+        { name: 'Pandamon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1041.jpg', evolutions: ['Mercurymon', 'Mirage Gaogamon', 'Justimon'] },
+        { name: 'Pumpmon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1596.jpg', evolutions: ['Rosemon', 'Lotusmon'] },
+        { name: 'Big Mamemon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1028.jpg', evolutions: ['Platinum Numemon', 'Prince Mamemon', 'Grand Locomon'] },
+        { name: 'Piccolomon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1410.jpg', evolutions: ['Venusmon', 'Ofanimon', 'Clavis Angemon'] },
+        { name: 'Hippogriffomon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1082.jpg', evolutions: ['Griffomon', 'Crossmon', 'Dynasmon'] },
+        { name: 'Brachiomon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1724.jpg', evolutions: ['Ouryumon', 'Rust Tyranomon', 'Ultimate Brachiomon'] },
+        { name: 'Volcamon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1059.jpg', evolutions: ['Bancho Leomon', 'Pile Volcamon', 'Gankoomon', 'Apollomon'] },
+        { name: 'Master Blimpmon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1465.jpg', evolutions: ['Grand Locomon', 'Gundramon'] },
+        { name: 'Mach Gaogamon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1074.jpg', evolutions: ['Mirage Gaogamon', 'Saint Galgomon'] },
+        { name: 'Mamemon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1412.jpg', evolutions: ['Pukumon', 'Prince Mamemon'] },
+        { name: 'Mega Seadramon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1132.jpg', evolutions: ['Jumbo Gamemon', 'Ouryumon', 'Metal Seadramon'] },
+        { name: 'Metal Mamemon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1413.jpg', evolutions: ['Metal Garurumon', 'Magna Kidmon'] },
+        { name: 'Lilamon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1073.jpg', evolutions: ['Lilithmon', 'Rosemon', 'Pinochimon'] },
+        { name: 'Lilimon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1359.jpg', evolutions: ['Rosemon', 'Ceresmon'] },
+        { name: 'Locomon', stage: 'V', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1198.jpg', evolutions: ['Grand Locomon', 'Hi Andromon'] },
+        { name: 'Astamon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1237.jpg', evolutions: ['Beelzebumon', 'Plutomon', 'Belphemon: Sleep Mode', 'Venom Vandemon'] },
+        { name: 'Archnemon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1199.jpg', evolutions: ['Lilithmon', 'Tyrant Kabuterimon', 'Lotusmon'] },
+        { name: 'Vamdemon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1085.jpg', evolutions: ['Demon', 'Belial Vamdemon', 'Venom Vamdemon'] },
+        { name: 'Etemon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1311.jpg', evolutions: ['Pile Volcamon', 'King Etemon', 'Metal Etemon'] },
+        { name: 'Okuwamon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1401.jpg', evolutions: ['Tyrant Kabuterimon', 'Herakle Kabuterimon', 'Gran Kuwagamon'] },
+        { name: 'Orochimon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1149.jpg', evolutions: ['Bacchusmon', 'Gundramon', 'Minervamon'] },
+        { name: 'Gerbemon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1380.jpg', evolutions: ['Jumbo Gamemon', 'Metal Etemon'] },
+        { name: 'Gigadramon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1402.jpg', evolutions: ['Gundramon', 'Chaosdramon'] },
+        { name: 'Cannonbeemon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1727.jpg', evolutions: ['Saint Galgomon', 'Tiger Vespamon'] },
+        { name: 'Groundramon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1211.jpg', evolutions: ['Megidramon', 'Breakdramon'] },
+        { name: 'Sharkmon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1907.jpg', evolutions: ['Neptunemon', 'Metal Seadramon'] },
+        { name: 'Shawujinmon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1076.jpg', evolutions: ['Barbamon', 'Jumbo Gamemon', 'Pinochimon'] },
+        { name: 'Jyureimon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1379.jpg', evolutions: ['Pinochimon', 'Rosemon', 'Gran Kuwagamon'] },
+        { name: 'Skull Greymon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1404.jpg', evolutions: ['Titamon', 'Skull Mammon'] },
+        { name: 'Skull Satamon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1006.jpg', evolutions: ['Barbamon', 'Piemon', 'Ebemon'] },
+        { name: 'Skullseadramon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1908.jpg', evolutions: ['Leviamon', 'Metal Seadramon'] },
+        { name: 'Dark Super Starmon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1217.jpg', evolutions: ['Beel Starmon', 'Titamon', 'Ravmon'] },
+        { name: 'Dagomon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1129.jpg', evolutions: ['Vulcanusmon', 'Ebemon'] },
+        { name: 'Tankdramon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1770.jpg', evolutions: ['Gundramon', 'Darkdramon'] },
+        { name: 'Tonosama Gekomon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1376.jpg', evolutions: ['King Etemon', 'Bacchusmon', 'Pukumon'] },
+        { name: 'Nanomon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1576.jpg', evolutions: ['Pharaohmon', 'Diablomon'] },
+        { name: 'Fantomon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1584.jpg', evolutions: ['Sakuyamon', 'Piemon', 'Belphemon: Sleep Mode', 'Ravmon'] },
+        { name: 'Black King Numemon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1753.jpg', evolutions: ['Platinum Numemon', 'Metal Etemon'] },
+        { name: 'Blue Meramon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1177.jpg', evolutions: ['Marsmon', 'Pharaohmon', 'Avenge Kidmon', 'Medieval Dukemon'] },
+        { name: 'Vademon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1411.jpg', evolutions: ['Ebemon'] },
+        { name: 'Matadrmon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1031.jpg', evolutions: ['Grand Dracumon', 'Slash Angemon', 'Dynasmon'] },
+        { name: 'Mummymon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1226.jpg', evolutions: ['Pharaohmon', 'Hi Andromon'] },
+        { name: 'Mistymon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1602.jpg', evolutions: ['Chaos Dukemon', 'Zanbamon'] },
+        { name: 'Megadramon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1301.jpg', evolutions: ['Megidramon', 'Mugendramon', 'Chaosdramon'] },
+        { name: 'Megalo Growmon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1134.jpg', evolutions: ['Megidramon', 'Dukemon'] },
+        { name: 'Metal Tyranomon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1364.jpg', evolutions: ['Rust Tyranomon', 'Mugendramon', 'Ultimate Brachiomon'] },
+        { name: 'Lucemon: Falldown Mode', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1039.jpg', evolutions: ['Lucemon: Satan Mode'] },
+        { name: 'Lady Devimon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1107.jpg', evolutions: ['Lilithmon', 'Beel Starmon', 'Mastemon'] },
+        { name: 'Wisemon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1726.jpg', evolutions: ['Demon', 'Chaos Dukemon', 'Ancient Wisemon'] },
+        { name: 'Waru Seadramon', stage: 'V', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1133.jpg', evolutions: ['Leviamon', 'Megidramon', 'Metal Seadramon'] },
+        { name: 'Shakkoumon', stage: 'V', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1723.jpg', evolutions: ['Goddramon', 'Junomon', 'Vikemon', 'Holydramon'] },
+        { name: 'Silphymon', stage: 'V', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1720.jpg', evolutions: ['Beel Starmon', 'Minervamon', 'Valkyrimon'] },
+        { name: 'Dinobeemon', stage: 'V', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1023.jpg', evolutions: ['Gran Kuwagamon', 'Tiger Vespamon'] },
+        { name: 'Paildramon', stage: 'V', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1408.jpg', evolutions: ['Dorugoramon', 'Imperialdramon: Dragon Mode', 'Darkdramon'] },
+        { name: 'Infermon', stage: 'V', attribute: 'Unknown', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1627.jpg', evolutions: ['Belial Vamdemon', 'Diablomon', 'Cherubimon (Vice)'] },
+        { name: 'Aldamon', stage: 'Fusion Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1669.jpg', evolutions: ['Kaiser Greymon'] },
+        { name: 'Beowolfmon', stage: 'Fusion Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1670.jpg', evolutions: ['Magna Garurumon'] },
+        { name: 'Apollomon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1173.jpg', evolutions: ['Grace Novamon'] },
+        { name: 'Alphamon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1416.jpg', evolutions: ['Alphamon: Ouryuken'] },
+        { name: 'Ulforce V-Dramon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1417.jpg', evolutions: [] },
+        { name: 'Valdurmon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1117.jpg', evolutions: ['Chaosmon: Valdur Arm'] },
+        { name: 'Venusmon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1172.jpg', evolutions: [] },
+        { name: 'War Greymon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1027.jpg', evolutions: ['Omegamon'] },
+        { name: 'Ouryumon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1193.jpg', evolutions: ['Alphamon: Ouryuken'] },
+        { name: 'Ofanimon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1421.jpg', evolutions: [] },
+        { name: 'Clavis Angemon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1613.jpg', evolutions: [] },
+        { name: 'Craniummon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1734.jpg', evolutions: ['Enbarrmon Craniummon'] },
+        { name: 'Crossmon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1197.jpg', evolutions: [] },
+        { name: 'Chronomon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1045.jpg', evolutions: [] },
+        { name: 'Cherubimon (Vice)', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1774.jpg', evolutions: [] },
+        { name: 'Cherubimon (Virtue)', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1735.jpg', evolutions: [] },
+        { name: 'Goddramon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1048.jpg', evolutions: [] },
+        { name: 'Shine Greymon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1094.jpg', evolutions: ['Shine Greymon: Burst Mode'] },
+        { name: 'Justimon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1737.jpg', evolutions: [] },
+        { name: 'Skull Mammon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1461.jpg', evolutions: [] },
+        { name: 'Slash Angemon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1614.jpg', evolutions: [] },
+        { name: 'Sleipmon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1086.jpg', evolutions: [] },
+        { name: 'Slayerdramon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1213.jpg', evolutions: ['Examon'] },
+        { name: 'Seraphimon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1315.jpg', evolutions: [] },
+        { name: 'Saint Galgomon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1741.jpg', evolutions: [] },
+        { name: 'Durandamon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1700.jpg', evolutions: [] },
+        { name: 'Neptunemon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1075.jpg', evolutions: [] },
+        { name: 'Hi Andromon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1426.jpg', evolutions: [] },
+        { name: 'Bancho Leomon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1049.jpg', evolutions: ['Chaosmon', 'Chaosmon: Valdur Arm'] },
+        { name: 'Herakle Kabuterimon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1306.jpg', evolutions: [] },
+        { name: 'Hououmon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1310.jpg', evolutions: [] },
+        { name: 'Holydramon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1453.jpg', evolutions: [] },
+        { name: 'Mastemon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1748.jpg', evolutions: [] },
+        { name: 'Marin Angemon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1024.jpg', evolutions: [] },
+        { name: 'Marsmon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1174.jpg', evolutions: [] },
+        { name: 'Jupitermon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1168.jpg', evolutions: ['Jupitermon: Wrath Mode'] },
+        { name: 'Ravmon', stage: 'VI', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1740.jpg', evolutions: ['Ravmon: Burst Mode'] },
+        { name: 'Ultimate Brachiomon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1725.jpg', evolutions: [] },
+        { name: 'Vulcanusmon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1178.jpg', evolutions: [] },
+        { name: 'Gankoomon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1688.jpg', evolutions: [] },
+        { name: 'Kuzuhamon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1754.jpg', evolutions: [] },
+        { name: 'Grand Locomon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1704.jpg', evolutions: [] },
+        { name: 'Griffomon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1083.jpg', evolutions: [] },
+        { name: 'Ceresmon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1176.jpg', evolutions: ['Ceresmon Medium'] },
+        { name: 'Ceresmon Medium', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1189.jpg', evolutions: ['Ceresmon'] },
+        { name: 'Saber Leomon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1424.jpg', evolutions: [] },
+        { name: 'Sakuyamon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1425.jpg', evolutions: [] },
+        { name: 'Jesmon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1749.jpg', evolutions: [] },
+        { name: 'Jumbo Gamemon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1098.jpg', evolutions: [] },
+        { name: 'Dianamon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1733.jpg', evolutions: ['Grace Novamon'] },
+        { name: 'Dynasmon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1738.jpg', evolutions: [] },
+        { name: 'Duftmon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1739.jpg', evolutions: ['Duftmon: Leopard Mode'] },
+        { name: 'Duftmon: Leopard Mode', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1743.jpg', evolutions: ['Duftmon'] },
+        { name: 'Dorugoramon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1019.jpg', evolutions: [] },
+        { name: 'Pile Volcamon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1060.jpg', evolutions: [] },
+        { name: 'Prince Mamemon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1429.jpg', evolutions: [] },
+        { name: 'Plesiomon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1450.jpg', evolutions: [] },
+        { name: 'Boltmon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1431.jpg', evolutions: [] },
+        { name: 'Mirage Gaogamon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1095.jpg', evolutions: ['Mirage Gaogamon: Burst Mode'] },
+        { name: 'Metal Garurumon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1135.jpg', evolutions: ['Omegamon'] },
+        { name: 'Metal Seadramon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1434.jpg', evolutions: [] },
+        { name: 'Medieval Dukemon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1603.jpg', evolutions: [] },
+        { name: 'Rosemon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1057.jpg', evolutions: ['Rosemon: Burst Mode'] },
+        { name: 'Lotusmon', stage: 'VI', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1742.jpg', evolutions: [] },
+        { name: 'Avenge Kidmon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1617.jpg', evolutions: [] },
+        { name: 'Ebemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1451.jpg', evolutions: [] },
+        { name: 'Venom Vamdemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1600.jpg', evolutions: [] },
+        { name: 'Ancient Wisemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1338.jpg', evolutions: [] },
+        { name: 'Gaioumon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1744.jpg', evolutions: [] },
+        { name: 'Chaos Dukemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1150.jpg', evolutions: [] },
+        { name: 'Chaosdramon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1422.jpg', evolutions: [] },
+        { name: 'Callismon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1492.jpg', evolutions: [] },
+        { name: 'Gundramon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1194.jpg', evolutions: [] },
+        { name: 'King Etemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1127.jpg', evolutions: [] },
+        { name: 'Grand Dracumon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1032.jpg', evolutions: [] },
+        { name: 'Chronomon Destroy', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1046.jpg', evolutions: [] },
+        { name: 'Zanbamon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1225.jpg', evolutions: [] },
+        { name: 'Undead Plutomon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1912.jpg', evolutions: [] },
+        { name: 'Darkdramon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1771.jpg', evolutions: ['Chaosmon'] },
+        { name: 'Tiger Vespamon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1745.jpg', evolutions: [] },
+        { name: 'Titamon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1440.jpg', evolutions: ['Skull Baluchimon Titamon'] },
+        { name: 'Tyrant Kabuterimon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1128.jpg', evolutions: [] },
+        { name: 'Demon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1038.jpg', evolutions: [] },
+        { name: 'Dukemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1126.jpg', evolutions: ['Dukemon: Crimson Mode'] },
+        { name: 'Bacchusmon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1179.jpg', evolutions: ['Bacchusmon Drunk'] },
+        { name: 'Bacchusmon Drunk', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1767.jpg', evolutions: ['Bacchusmon'] },
+        { name: 'Barbamon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1036.jpg', evolutions: [] },
+        { name: 'Piemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1427.jpg', evolutions: ['Apocalymon'] },
+        { name: 'Pinochimon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1428.jpg', evolutions: [] },
+        { name: 'Pharaohmon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1227.jpg', evolutions: [] },
+        { name: 'Pukumon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1196.jpg', evolutions: [] },
+        { name: 'Platinum Numemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1069.jpg', evolutions: [] },
+        { name: 'Plutomon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1180.jpg', evolutions: ['Undead Plutomon'] },
+        { name: 'Breakdramon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1214.jpg', evolutions: ['Examon'] },
+        { name: 'Belial Vamdemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1233.jpg', evolutions: [] },
+        { name: 'Beel Starmon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1195.jpg', evolutions: [] },
+        { name: 'Beelzebumon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1035.jpg', evolutions: ['Beelzebumon: Blast Mode'] },
+        { name: 'Belphemon: Sleep Mode', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1439.jpg', evolutions: ['Belphemon: Rage Mode'] },
+        { name: 'Magna Kidmon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1616.jpg', evolutions: [] },
+        { name: 'Minervamon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1747.jpg', evolutions: ['Mervamon'] },
+        { name: 'Millenniumon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1230.jpg', evolutions: [] },
+        { name: 'Mugendramon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1385.jpg', evolutions: ['Millenniumon'] },
+        { name: 'Megidramon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1047.jpg', evolutions: [] },
+        { name: 'Metal Etemon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1312.jpg', evolutions: [] },
+        { name: 'Mercurymon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1080.jpg', evolutions: [] },
+        { name: 'Junomon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1170.jpg', evolutions: ['Junomon: Hysteric Mode'] },
+        { name: 'Junomon: Hysteric Mode', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1171.jpg', evolutions: ['Junomon'] },
+        { name: 'Rust Tyranomon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1383.jpg', evolutions: [] },
+        { name: 'Leviamon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1037.jpg', evolutions: [] },
+        { name: 'Lilithmon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1034.jpg', evolutions: [] },
+        { name: 'Lord Knightmon', stage: 'VI', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1703.jpg', evolutions: [] },
+        { name: 'Imperialdramon: Dragon Mode', stage: 'VI', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1732.jpg', evolutions: ['Imperialdramon: Fighter Mode', 'Imperialdramon: Paladin Mode'] },
+        { name: 'Imperialdramon: Fighter Mode', stage: 'VI', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1419.jpg', evolutions: ['Imperialdramon: Paladin Mode', 'Imperialdramon: Dragon Mode'] },
+        { name: 'Vikemon', stage: 'VI', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1346.jpg', evolutions: [] },
+        { name: 'Valkyrimon', stage: 'VI', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1773.jpg', evolutions: [] },
+        { name: 'Gran Kuwagamon', stage: 'VI', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1423.jpg', evolutions: [] },
+        { name: 'Diablomon', stage: 'VI', attribute: 'Unknown', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1632.jpg', evolutions: ['Armagemon'] },
+        { name: 'Rapidmon Armor', stage: 'Golden Armor', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1751.jpg', evolutions: [] },
+        { name: 'Magnamon', stage: 'Golden Armor', attribute: 'Free', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1382.jpg', evolutions: [] },
+        { name: 'Kaiser Greymon', stage: 'Transcendent Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1677.jpg', evolutions: ['Susanoomon'] },
+        { name: 'Magna Garurumon', stage: 'Transcendent Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1678.jpg', evolutions: ['Susanoomon', 'Magna Garurumon: Separation'] },
+        { name: 'Magna Garurumon: Separation', stage: 'Transcendent Hybrid', attribute: 'Variable', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1675.jpg', evolutions: ['Magna Garurumon'] },
+        { name: 'Alphamon: Ouryuken', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1766.jpg', evolutions: [] },
+        { name: 'Enbarrmon Craniummon', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1494.jpg', evolutions: [] },
+        { name: 'Imperialdramon: Paladin Mode', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1420.jpg', evolutions: [] },
+        { name: 'Omegamon', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1088.jpg', evolutions: ['Omegamon Zwart'] },
+        { name: 'Omegamon Zwart', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1757.jpg', evolutions: ['Omegamon'] },
+        { name: 'Chaosmon', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1772.jpg', evolutions: [] },
+        { name: 'Chaosmon: Valdur Arm', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1118.jpg', evolutions: [] },
+        { name: 'Grace Novamon', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1604.jpg', evolutions: [] },
+        { name: 'Shine Greymon: Burst Mode', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1776.jpg', evolutions: [] },
+        { name: 'Susanoomon', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1104.jpg', evolutions: [] },
+        { name: 'Jupitermon: Wrath Mode', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1169.jpg', evolutions: [] },
+        { name: 'Ravmon: Burst Mode', stage: 'VI+', attribute: 'Vaccine', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1778.jpg', evolutions: [] },
+        { name: 'Examon', stage: 'VI+', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1215.jpg', evolutions: [] },
+        { name: 'Mirage Gaogamon: Burst Mode', stage: 'VI+', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1777.jpg', evolutions: [] },
+        { name: 'Rosemon: Burst Mode', stage: 'VI+', attribute: 'Data', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1779.jpg', evolutions: [] },
+        { name: 'Skull Baluchimon Titamon', stage: 'VI+', attribute: 'Unknown', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1915.jpg', evolutions: [] },
+        { name: 'Dukemon: Crimson Mode', stage: 'VI+', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1105.jpg', evolutions: [] },
+        { name: 'Beelzebumon: Blast Mode', stage: 'VI+', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1775.jpg', evolutions: [] },
+        { name: 'Belphemon: Rage Mode', stage: 'VI+', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1040.jpg', evolutions: [] },
+        { name: 'Mervamon', stage: 'VI+', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1181.jpg', evolutions: [] },
+        { name: 'Lucemon: Satan Mode', stage: 'VI+', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1435.jpg', evolutions: [] },
+        { name: 'Armagemon', stage: 'VI+', attribute: 'Virus', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1106.jpg', evolutions: [] },
+        { name: 'Agumon -Yuki No Kizuna-', stage: 'VI+', attribute: 'Unknown', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1489.jpg', evolutions: [] },
+        { name: 'Apocalymon', stage: 'VI+', attribute: 'Unknown', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1328.jpg', evolutions: [] },
+        { name: 'Gabumon-Yujo No Kizuna-', stage: 'VI+', attribute: 'Unknown', imageUrl: 'http://humulos.com/digimon/images/art/ts/ui_chara_icon_1490.jpg', evolutions: [] },
+    ];
+
+    const stageMap = {
+        'I': 'Fresh / Baby I', 'II': 'In-Training / Baby II', 'III': 'Rookie / Child', 'IV': 'Champion / Adult', 'V': 'Ultimate / Perfect', 'VI': 'Mega / Ultimate', 'VI+': 'Ultra / Super Ultimate', 'Armor': 'Armor', 'Golden Armor': 'Golden Armor', 'Human Hybrid': 'Human Hybrid', 'Beast Hybrid': 'Beast Hybrid', 'Fusion Hybrid': 'Fusion Hybrid', 'Transcendent Hybrid': 'Transcendent Hybrid', 'Unknown': 'Unknown'
+    };
+
+    const lazyImageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                const src = img.getAttribute('data-src');
+                if (src) {
+                    img.src = src;
+                    img.classList.add('lazyloaded');
+                }
+                lazyImageObserver.unobserve(img);
+            }
+        });
+    });
+
+    function mapStage(stageKey) {
+        return stageMap[stageKey] || stageKey;
+    }
+
+    function processData() {
+        for (const digi of digimonRawData) {
+            digimonDB.set(digi.name.toLowerCase(), { ...digi, preEvolutions: [] });
+        }
+        for (const [, digi] of digimonDB.entries()) {
+            if (digi.evolutions) {
+                for (const evoName of digi.evolutions) {
+                    const evoKey = evoName.toLowerCase();
+                    if (digimonDB.has(evoKey)) {
+                        const evoDigimon = digimonDB.get(evoKey);
+                        if (!evoDigimon.preEvolutions.includes(digi.name)) {
+                            evoDigimon.preEvolutions.push(digi.name);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function createDigimonCard(digimon, isClickable = true) {
+        const card = document.createElement('div');
+        card.className = 'digi-card bg-gray-800 rounded-lg p-3 text-center w-40 border-2 border-gray-700';
+        if(isClickable) card.classList.add('cursor-pointer');
+
+        const img = document.createElement('img');
+        img.setAttribute('data-src', digimon.imageUrl || `https://placehold.co/96x96/1f2937/f3f4f6?text=${digimon.name.substring(0,1)}`);
+        img.alt = digimon.name;
+        img.className = 'w-24 h-24 object-contain mx-auto mb-2';
+        img.onerror = () => {
+            img.src = `https://placehold.co/96x96/1f2937/f3f4f6?text=${digimon.name.substring(0,1)}`;
+            img.alt = `Image of ${digimon.name} unavailable`;
+        };
+        lazyImageObserver.observe(img);
+
+        const name = document.createElement('h3');
+        name.className = 'font-semibold text-lg';
+        name.textContent = digimon.name;
+
+        const stage = document.createElement('p');
+        stage.className = 'text-sm text-gray-400';
+        stage.textContent = mapStage(digimon.stage);
+
+        card.appendChild(img);
+        card.appendChild(name);
+        card.appendChild(stage);
+
+        if (isClickable) {
+            card.addEventListener('click', () => {
+                displayDigimon(digimon.name);
+                searchInput.value = digimon.name;
+            });
+        }
+        return card;
+    }
+
+    function displayDigimon(name) {
+        const key = name.toLowerCase();
+        if (!digimonDB.has(key)) return;
+
+        const digimon = digimonDB.get(key);
+        preEvolutionsContainer.innerHTML = '';
+        mainDigimonContainer.innerHTML = '';
+        evolutionsContainer.innerHTML = '';
+
+        const mainCard = document.createElement('div');
+        mainCard.className = 'flex flex-col items-center gap-4';
+
+        const mainImg = document.createElement('img');
+        mainImg.src = digimon.imageUrl || `https://placehold.co/256x256/1f2937/f3f4f6?text=${digimon.name.substring(0,1)}`;
+        mainImg.alt = digimon.name;
+        mainImg.className = 'w-48 h-48 md:w-64 md:h-64 object-contain';
+        mainImg.onerror = () => {
+            mainImg.src = `https://placehold.co/256x256/1f2937/f3f4f6?text=${digimon.name.substring(0,1)}`;
+            mainImg.alt = `Image of ${digimon.name} unavailable`;
+        };
+
+        const mainName = document.createElement('h1');
+        mainName.className = 'text-3xl md:text-4xl font-bold text-amber-300';
+        mainName.textContent = digimon.name;
+
+        const infoContainer = document.createElement('div');
+        infoContainer.className = 'mt-4 w-full max-w-xs bg-gray-800/70 p-4 rounded-lg border border-gray-700 text-md';
+        infoContainer.innerHTML = `
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <span class="font-semibold text-gray-400 text-left">Stage:</span>
+                        <span class="text-white text-right">${mapStage(digimon.stage) || '??'}</span>
+                        <span class="font-semibold text-gray-400 text-left">Attribute:</span>
+                        <span class="text-white text-right">${digimon.attribute || '??'}</span>
+                    </div>`;
+
+        mainCard.appendChild(mainImg);
+        mainCard.appendChild(mainName);
+        mainCard.appendChild(infoContainer);
+        mainDigimonContainer.appendChild(mainCard);
+
+        if (digimon.preEvolutions && digimon.preEvolutions.length > 0) {
+            digimon.preEvolutions.forEach(preEvoName => {
+                const preEvo = digimonDB.get(preEvoName.toLowerCase());
+                if (preEvo) preEvolutionsContainer.appendChild(createDigimonCard(preEvo));
+            });
+        } else {
+            preEvolutionsContainer.innerHTML = `<p class="text-gray-500 mt-8">No pre-evolutions</p>`;
+        }
+
+        if (digimon.evolutions && digimon.evolutions.length > 0) {
+            digimon.evolutions.forEach(evoName => {
+                const evo = digimonDB.get(evoName.toLowerCase());
+                if (evo) evolutionsContainer.appendChild(createDigimonCard(evo));
+            });
+        } else {
+            evolutionsContainer.innerHTML = `<p class="text-gray-500 mt-8">No evolutions</p>`;
+        }
+    }
+
+    function setupSearch() {
+        const digimonNames = Array.from(digimonDB.values()).map(d => d.name);
+        digimonNames.sort();
+        datalist.innerHTML = digimonNames.map(name => `<option value="${name}"></option>`).join('');
+        searchInput.addEventListener('change', (e) => {
+            const selectedName = e.target.value;
+            if (digimonDB.has(selectedName.toLowerCase())) {
+                displayDigimon(selectedName);
+            }
+        });
+        // Adds a listener for the 'input' event for real-time search
+        searchInput.addEventListener('input', (e) => {
+            const selectedName = e.target.value;
+            // Checks if the typed name exactly matches a name in the list
+            if (digimonDB.has(selectedName.toLowerCase())) {
+                displayDigimon(selectedName);
+            }
+        });
+    }
+
+    function createFullListCard(digimon) {
+        const card = document.createElement('div');
+        card.className = 'full-list-card bg-gray-800 rounded-lg p-3 text-center w-32 border-2 border-gray-700 cursor-pointer flex flex-col items-center justify-center';
+
+        const img = document.createElement('img');
+        img.setAttribute('data-src', digimon.imageUrl || `https://placehold.co/80x80/1f2937/f3f4f6?text=${digimon.name.substring(0,1)}`);
+        img.alt = digimon.name;
+        img.className = 'w-20 h-20 object-contain mx-auto mb-2';
+        img.onerror = () => {
+            img.src = `https://placehold.co/80x80/1f2937/f3f4f6?text=${digimon.name.substring(0,1)}`;
+            img.alt = `Image of ${digimon.name} unavailable`;
+        };
+        lazyImageObserver.observe(img);
+
+        const name = document.createElement('p');
+        name.className = 'font-semibold text-base';
+        name.textContent = digimon.name;
+
+        card.appendChild(img);
+        card.appendChild(name);
+
+        card.addEventListener('click', () => {
+            displayDigimon(digimon.name);
+            searchInput.value = digimon.name;
+            fullListContainer.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            appContainer.style.display = '';
+            window.scrollTo(0, 0);
+        });
+        return card;
+    }
+
+    function displayFullList() {
+        fullListContent.innerHTML = '';
+        const groupedByStage = new Map();
+
+        digimonDB.forEach(digi => {
+            const stage = digi.stage;
+            if (!groupedByStage.has(stage)) {
+                groupedByStage.set(stage, []);
+            }
+            groupedByStage.get(stage).push(digi);
+        });
+
+        const stageOrder = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VI+', 'Armor', 'Golden Armor', 'Human Hybrid', 'Beast Hybrid', 'Fusion Hybrid', 'Transcendent Hybrid', 'Unknown'];
+
+        stageOrder.forEach(stageKey => {
+            if (groupedByStage.has(stageKey)) {
+                const digimons = groupedByStage.get(stageKey).sort((a, b) => a.name.localeCompare(b.name));
+
+                const stageTitle = document.createElement('h2');
+                stageTitle.className = 'text-3xl font-bold text-amber-300 border-b-2 border-gray-700 pb-2 mb-4';
+                stageTitle.textContent = mapStage(stageKey);
+                fullListContent.appendChild(stageTitle);
+
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4';
+
+                digimons.forEach(digi => {
+                    grid.appendChild(createFullListCard(digi));
+                });
+
+                fullListContent.appendChild(grid);
+            }
+        });
+    }
+
+
+    function init() {
+        processData();
+        if (digimonDB.size > 0) {
+            setupSearch();
+            displayDigimon('Agumon');
+            searchInput.value = 'Agumon';
+            loaderContainer.style.display = 'none';
+            appContainer.classList.remove('hidden');
+
+            fullListBtn.addEventListener('click', () => {
+                appContainer.style.display = 'none';
+                fullListContainer.classList.remove('hidden');
+                displayFullList();
+                window.scrollTo(0, 0);
+            });
+
+            backToDexBtn.addEventListener('click', () => {
+                fullListContainer.classList.add('hidden');
+                appContainer.style.display = '';
+                window.scrollTo(0, 0);
+            });
+
+        } else {
+            loaderContainer.innerHTML = `<p class="text-red-500">Failed to process Digimon data.</p>`;
+        }
+    }
+
+    init();
+});

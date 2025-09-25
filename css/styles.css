@@ -1,0 +1,258 @@
+/* Base Styles */
+:root {
+    --digi-blue: #00a8e8;
+    --digi-orange: #ff9f1c;
+    --digi-yellow: #ffd700;
+    --digi-red: #ff3b3f;
+    --digi-bg: #0a0e23;
+    --digi-card-bg: rgba(20, 30, 60, 0.7);
+}
+
+@keyframes digitalGlow {
+    0% { text-shadow: 0 0 5px var(--digi-blue), 0 0 10px var(--digi-blue); }
+    50% { text-shadow: 0 0 10px var(--digi-orange), 0 0 20px var(--digi-orange); }
+    100% { text-shadow: 0 0 5px var(--digi-blue), 0 0 10px var(--digi-blue); }
+}
+
+body {
+    font-family: 'Oxanium', sans-serif;
+    background-color: var(--digi-bg);
+    color: #fff;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(0, 168, 232, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(255, 63, 63, 0.1) 0%, transparent 20%);
+    background-attachment: fixed;
+}
+
+/* Digimon Card Styles */
+.digi-card, .full-list-card {
+    background: var(--digi-card-bg);
+    border: 2px solid var(--digi-blue);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+.digi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: 0.5s;
+}
+
+.digi-card:hover::before {
+    left: 100%;
+}
+
+/* Container for pre-evolutions and evolutions */
+#pre-evolutions,
+#evolutions {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    flex-wrap: wrap;
+    background: rgba(10, 14, 35, 0.7);
+    border: 1px solid var(--digi-blue);
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 168, 232, 0.2);
+}
+
+/* Card hover effects */
+.digi-card:hover, .full-list-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 25px -5px rgba(0, 168, 232, 0.4);
+    border-color: var(--digi-orange);
+    z-index: 10;
+}
+
+/* Main title styling */
+h1 {
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--digi-yellow);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    position: relative;
+    display: inline-block;
+    padding: 0 1rem;
+}
+
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--digi-blue), transparent);
+}
+
+/* Button styles */
+button {
+    background: linear-gradient(45deg, var(--digi-blue), #0066cc);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-family: 'Oxanium', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 168, 232, 0.4);
+    background: linear-gradient(45deg, var(--digi-orange), #ff6b35);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Search input */
+input[type="text"] {
+    background: rgba(20, 30, 60, 0.8);
+    border: 2px solid var(--digi-blue);
+    border-radius: 25px;
+    padding: 0.75rem 1.5rem;
+    color: white;
+    font-family: 'Oxanium', sans-serif;
+    width: 100%;
+    max-width: 500px;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--digi-orange);
+    box-shadow: 0 0 15px rgba(255, 159, 28, 0.3);
+}
+
+/* Section headers */
+h2 {
+    color: var(--digi-blue);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1.5rem;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 50%;
+    height: 2px;
+    background: var(--digi-orange);
+}
+
+/* Main digimon image effect */
+.main-digimon img {
+    filter: drop-shadow(0 0 20px rgba(0, 168, 232, 0.7));
+    transition: transform 0.3s ease;
+}
+
+.main-digimon img:hover {
+    transform: scale(1.05);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(20, 30, 60, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, var(--digi-blue), var(--digi-orange));
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, var(--digi-orange), var(--digi-red));
+}
+
+/* Custom scrollbar for a better look */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+.digi-card,
+.full-list-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 2px solid transparent;
+}
+
+.digi-card:hover,
+.full-list-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    border-color: #f59e0b;
+}
+
+.main-digimon img {
+    filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.6));
+}
+
+img[data-src] {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+img.lazyloaded {
+    opacity: 1;
+}
+
+/* Simple loader animation */
+#loader {
+    border: 8px solid #374151;
+    border-top: 8px solid #f59e0b;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
